@@ -80,3 +80,81 @@ Next, make sure that all the publish settings are correct. And click on "Publish
 If all went good, you should see a message says that the publish was successful.
 
 ![Publish to folder](https://github.com/ShaharNaveh/week3_proj/blob/main/docs/img/PUBLISH-SETUP-Successful.png)
+
+### Deploy the website to the server
+
+#### Prerequisite
+
+First, we need to install the IIS role.
+
+Run the following command in an elevated powershell session (Run as administrator).
+
+```powershell
+Install-WindowsFeature -name Web-Server -IncludeManagementTools
+```
+
+Next, we need to install the [Winodws Hosting Bundle](https://dotnet.microsoft.com/download/dotnet/thank-you/runtime-aspnetcore-5.0.10-windows-hosting-bundle-installer), in order for IIS to be able to run our project.
+
+> **NOTICE**: It is very important to install the IIS role **BEFORE** the "Windows hosting bundle".
+
+#### Setup the application pool
+
+> **NOTE**: All the following commands needs to be executed in an elevated powershell session (Run as administrator).
+
+```powershell
+Install-WindowsFeature -name Web-Server -IncludeManagementTools
+```
+
+Next, import the "WebAdministration" module, so we can manage the IIS server.
+
+```powershell
+Import-Module WebAdministration
+```
+
+Next, create new WebAppPool and call it what ever you want, we will call ours "Bonus_Website"
+
+```powershell
+New-WebAppPool -Name "Bonus_Website"
+```
+
+Next, we will set the "managedRuntimeVersion" to "No Managed Code", we can achive this by running:
+
+```powershell
+Set-ItemProperty -Path IIS:\AppPools\Bonus_Website managedRuntimeVersion ""
+```
+
+#### Setup the website
+
+First, we need to create the directory for our website.
+
+Usually the website sits in
+
+```
+C:\inetpub\wwwroot\
+```
+
+So we will create a folder in that location, and we will call our folder "bonus":
+
+```powershell
+New-Item -Path C:\inetpub\wwwroot\bonus -ItemType Directory
+```
+
+Next, transfter the content of the directory that you published in [here](#setup).
+
+Next, we will create the website entry
+
+```powershell
+New-Website -Name "Bonus_Website" -ApplicationPool "Bonus_Website" -PhysicalPath "C:\inetpub\wwwroot\bonus\" -Port 5100
+```
+
+And, the last step is to enable trafic on that port.
+
+```powershell
+New-NetFirewallRule -DisplayName "Bonus Website" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 5100
+```
+
+---
+
+Result:
+
+![Working-Proof](https://github.com/ShaharNaveh/week3_proj/blob/main/docs/img/WORKING_PROOF.png)
